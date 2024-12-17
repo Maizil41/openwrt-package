@@ -262,6 +262,8 @@ do
 	if [ "$GWIF" = "" ]; then
 		GWIF="br-lan"
 	fi
+	GWIFMAC=$(ifconfig $GWIF | grep HWaddr | awk '{print $5}' 2>/dev/null)
+
 	AS_HOSTNAME=$(uci get wiwiz.portal.server 2>/dev/null)
 	#AS_HTTPPORT=`cat $CONFPATH | grep -v "^#" | grep AS_HTTPPORT | cut -d = -f 2`
 	WIFIDOG_CONFPATH=/etc
@@ -350,6 +352,7 @@ do
 	echo 'GatewayID '$GW_ID >                             $WD_CONF_TMP
 	echo 'ExternalInterface '$ETNIF >>                     $WD_CONF_TMP
 	echo 'GatewayInterface '$GWIF >>                     $WD_CONF_TMP
+	echo 'GatewayInterfaceMac '$GWIFMAC >>               $WD_CONF_TMP
 
 	if [ "$MSG_FILE" != "" ]; then
 		echo "HtmlMessageFile $MSG_FILE" >>                 $WD_CONF_TMP
@@ -423,7 +426,8 @@ do
 	
 	if [ "$ENVINFO_SENT" = "0" ]; then
 		MODEL=$(/usr/local/hsbuilder/getmodel.sh)
-		curl -m 5 --data "e2=$ENVINFO_$MY_VERSION|$MODEL" "http://$AS_HOSTNAME_X/as/s/readconf/?m=info&gw_id=$GW_ID&ver=$MY_VERSION" 1>/dev/null 2>/dev/null
+		curl -m 5 --data-urlencode "e2=$ENVINFO_$MY_VERSION|$MODEL" "http://$AS_HOSTNAME_X/as/s/readconf/?m=info&gw_id=$GW_ID&ver=$MY_VERSION" 1>/dev/null 2>/dev/null || \
+		curl -m 5 --data "e2=$ENVINFO_$MY_VERSION|$MODEL" "http://$AS_HOSTNAME_X/as/s/readconf/?m=info&gw_id=$GW_ID&ver=$MY_VERSION" 1>/dev/null 2>/dev/null 
 		ENVINFO_SENT=1
 	fi
 	
